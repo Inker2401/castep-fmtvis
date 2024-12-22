@@ -1,0 +1,15 @@
+symmetry_generate
+kpoints_mp_grid 6 6 6
+
+%block lattice_abc
+4.000 4.000 4.000
+90.00 90.00 90.00
+%endblock lattice_abc
+
+%block positions_frac
+Ba 0.0 0.0 0.0
+Ti 0.5 0.5 0.5
+O  0.0 0.5 0.5
+O  0.5 0.0 0.5
+O  0.5 0.5 0.0
+%endblock positions_frac

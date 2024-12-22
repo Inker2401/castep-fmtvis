@@ -1,0 +1,15 @@
+%block lattice_abc
+5.431 5.431 5.431
+90.00 90.00 90.00
+%endblock lattice_abc
+
+%block positions_frac
+Si 0.00 0.00 0.00
+Si 0.00 0.50 0.50
+Si 0.50 0.00 0.50
+Si 0.50 0.50 0.00
+Si 0.25 0.25 0.25
+Si 0.25 0.75 0.75
+Si 0.75 0.25 0.75
+Si 0.75 0.75 0.25
+%endblock positions_frac
