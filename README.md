@@ -12,7 +12,7 @@ The required dependencies are as follows:
 - `python>=3.10`
 - `numpy>=1.26`
 - `pyvista>=0.44.0`
--  vtk>=9.4.0
+-  `vtk>=9.4.0`
 - `matplotlib`
 - `scipy`
 
@@ -22,7 +22,9 @@ It is **strongly recommended** that you create a Python virtual environment (and
 running the install command.
 
 Clone the repository using
+
 ```git clone https://gitlab.com/Inker2401/castep-fmtvis.git castep-fmtvis```
+
 This will create a folder called `castep-fmtvis`.
 
 ```pip install castep-fmtvis```
