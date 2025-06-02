@@ -4,8 +4,8 @@ A visualisation tool for formatted grid data produced by CASTEP.
 
 This tool has been greatly refactored recently for increased modularity to function now more as a library rather than
 a single script, thereby providing greater flexibility.
-In the future, a Python script serving as an entry-point to the library will be shipped allowing similar functionality
-to the previous largely command-line script.
+In the future, a Python script serving as an entry point to the library will be shipped, allowing similar functionality
+to the previous, largely command-line script.
 
 ## Installation
 The required dependencies are as follows:
@@ -30,27 +30,30 @@ This will create a folder called `castep-fmtvis`.
 ```pip install castep-fmtvis```
 
 Alternatively, you can directly from the official Git project repository by using the command
+
 ```pip install git+https://gitlab.com/Inker2401/castep-fmtvis.git```
+
 or you may install from a compressed tarball (`.tar.gz`) using the command (for example)
-`pip install castep_fmtvis.tar.gz`.
+
+```pip install castep_fmtvis.tar.gz```.
 
 ## Usage
 Before anything else, please ensure you can run all Python scripts within the `test` directory.
 This is primarily designed to catch changes in PyVista's API between versions that may break the script.
 
-Examples of Python scripts for typical use-cases are provided in the `examples` directory.
+Examples of Python scripts for typical use cases are provided in the `examples` directory.
 
 ## Usage with Other Codes
 ### Atom Visualisation
 The data for visualising the simulation cell is done by the `castepfmtvis.celldata.UnitCell` class.
-For ease of use, this can be initialised from a CASTEP `.cell` file but also may be initialised directly as follows:
+For ease of use, this can be initialised from a CASTEP `.cell` file, but also may be initialised directly as follows:
 ```
 from castepfmtvis.celldata import UnitCell
 # Some stuff
 cell = UnitCell(real_lat=real_lat, species=species, frac_pos=frac_pos)
 ```
 Here:
-- `real_lat` is the real lattice vectors as a 3x3 matrix which each vector as a row (first-index),
+- `real_lat` is the real lattice vectors as a 3x3 matrix, where each vector is a row (first-index),
 - `species` is the list of chemical species of each 'atom' present in a cell.
    You can also specify this to be something that is not a real chemical element to visualise other spheres within the cell for more sophisticated plots alongside the atoms
    or piggy back of the existing element styles.
@@ -118,6 +121,7 @@ Traceback:
 
 ## Citation
 If you found this program useful, please consider citing it :slight_smile: (see `CITATION.cff`) alongside the reference for PyVista:
+
 Sullivan and Kaszynski, (2019). "PyVista: 3D plotting and mesh analysis through a streamlined interface for the Visualization Toolkit (VTK)". _Journal of Open Source Software_, **4**(37), 1450, https://doi.org/10.21105/joss.01450
 
 
@@ -126,9 +130,11 @@ Credit to the [JMol team](https://jmol.sourceforge.net/) for the default colour 
 The list of JMol colours can be found at: <https://jmol.sourceforge.net/jscolors/>
 
 The CPK colour scheme is originally outlined in
+
 Corey-Pauling-Koltun. Walter L. Koltun (1965), _Space filling atomic units and connectors for molecular models_. [U.S. Patent 3170246](https://patents.google.com/patent/US3170246)
 
 The VESTA colour scheme was taken from the VESTA program
+
 K. Momma and F. Izumi, "VESTA: a three-dimensional visualization system for electronic and structural analysis", _Journal of Applied Crystallography_, **41** 653 (2008)
 
 ## License
