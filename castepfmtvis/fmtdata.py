@@ -208,7 +208,7 @@ class GridData():
                  is_den: bool | None = None,
                  nblank_header: int = 1,
                  real_lat: npt.NDArray[np.float64] = None,
-                 dataarr: np.NDArray[np.float64] = None,
+                 dataarr: npt.NDArray[np.float64] = None,
                  units: str = ''
                  ):
         """
