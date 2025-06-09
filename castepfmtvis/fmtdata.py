@@ -207,8 +207,8 @@ class GridData():
     def __init__(self, filename: str | None = None,
                  is_den: bool | None = None,
                  nblank_header: int = 1,
-                 real_lat: npt.NDArray[np.float64] = None,
-                 datarr: npt.NDArray[np.float64] = None,
+                 real_lat: npt.NDArray[np.float64] | None = None,
+                 datarr: npt.NDArray[np.float64] | None = None,
                  units: str = ''
                  ):
         """
@@ -314,7 +314,7 @@ class GridData():
                 self.units = units.strip()
 
             # Set other necessary info
-            self.fine_grid = self.cur_data.shape
+            self.fine_grid = np.array(self.cur_data.shape, dtype=int)
             self.npts = np.prod(self.fine_grid)
 
             # Set other dummy info
