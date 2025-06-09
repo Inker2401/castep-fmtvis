@@ -199,6 +199,7 @@ class PathData:
                          label_fontsize: int = 10,
                          xtick_rotation: int = 20,
                          label_rotation: int = 0,
+                         do_label: str = 'both',
                          ) -> mpl.axes._secondary_axes.SecondaryAxis:
         """Format the labels on the x-axis along the path on the provided axis.
 
@@ -219,6 +220,11 @@ class PathData:
         ax2 : mpl.axes._secondary_axes.SecondaryAxis
             Secondary axes for user labels
         """
+
+        # 09/06/2025 Allow control on which points are labelled. Useful for subplots.
+        if do_label not in ('both', 'frac', 'custom'):
+            raise ValueError('do_label must be one of: "both", "frac" or "custom"')
+
         # Determine the unique points in the user's path
         unique_pts = np.unique(self.spec_pts, axis=0)
 
@@ -256,9 +262,10 @@ class PathData:
         assert len(labels_flat) == len(indx_flat)
 
         # Add fractional coordinate labels
-        ax.set_xticks(indx_flat)
-        ax.set_xticklabels(labels_flat, rotation=xtick_rotation,
-                           ha='center', fontsize=xtick_fontsize)
+        if do_label in ('frac', 'both'):
+            ax.set_xticks(indx_flat)
+            ax.set_xticklabels(labels_flat, rotation=xtick_rotation,
+                               ha='center', fontsize=xtick_fontsize)
 
         # Now do the same for the user's custom labels
         labels_flat = []
@@ -267,12 +274,13 @@ class PathData:
                 labels_flat.append(j)
 
         # Add user custom labels
-        ax2 = ax.secondary_xaxis('top')
-        ax2.set_xticks(indx_flat)
-        ax2.set_xticklabels(labels_flat, rotation=label_rotation,
-                            ha='center', fontsize=label_fontsize)
+        if do_label in ('custom', 'both'):
+            ax2 = ax.secondary_xaxis('top')
+            ax2.set_xticks(indx_flat)
+            ax2.set_xticklabels(labels_flat, rotation=label_rotation,
+                                ha='center', fontsize=label_fontsize)
 
-        return ax2
+            return ax2
 
     def get_path_frac(self) -> npt.NDArray[np.float64]:
         """Get the list of points in the path in fractional coordinates.
