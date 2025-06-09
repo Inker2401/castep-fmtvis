@@ -6,7 +6,7 @@ with open('README.md', 'r', encoding='UTF-8') as file:
 
 setup(
     name='castepfmtvis',
-    version='3.2.0',
+    version='3.2.1',
     description='A tool for visualing formatted CASTEP potentials, charge and spin densities.',
     long_description=long_description,
     # Requires setuptools >= 38.6.0
