@@ -229,6 +229,14 @@ class GridData():
             number of blank lines after header
 
         """
+        # Declare empty arrays first and allocate later
+        self.charge: npt.NDArray[np.float64] | None = None
+        self.spin: npt.NDArray[np.float64] | None = None
+        self.ncspin: npt.NDArray[np.float64] | None = None
+        self.pot: npt.NDArray[np.float64] | None = None
+        self.ncpot: npt.NDArray[np.float64] | None = None
+        self.cur_data: npt.NDArray[np.float64] | None = None
+
         # 09/06/2025 Decide how we want to initialise the file
         if filename is not None:
             # Check if we have a density, otherwise look at the file extension
@@ -254,14 +262,6 @@ class GridData():
 
             # Extract the unit cell vectors
             self.real_lat = read_real_lat_fmt(filename)
-
-            # Declare empty arrays first and allocate later
-            self.charge: npt.NDArray[np.float64] | None = None
-            self.spin: npt.NDArray[np.float64] | None = None
-            self.ncspin: npt.NDArray[np.float64] | None = None
-            self.pot: npt.NDArray[np.float64] | None = None
-            self.ncpot: npt.NDArray[np.float64] | None = None
-            self.cur_data: npt.NDArray[np.float64] | None = None
 
             # Extract spin information and set non-collinear flag
             nsets = gridvals.shape[0]
