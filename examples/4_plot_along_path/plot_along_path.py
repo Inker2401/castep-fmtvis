@@ -72,6 +72,11 @@ ax2.set_ylabel(r'potential $v_s(\mathbf{r})$ (Ha)')
 gridpath.set_current_slice(pot.cur_data)
 gridpath.plot_slice(ax2)
 
+# Format the x-axis tick labels to show the points in the path (like a band structure).
+# Custom user labels will be shown at the top of the plot.
+gridpath.format_pos_ticks(ax1)
+gridpath.format_pos_ticks(ax2)
+
 # Now visualise the figures.
 # KLUDGE Matplotlib will block execution preventing pyvista from showing the plot
 # Unfortunately, when pyvista becomes interactive, the matplotlib window no longer will be interactive
