@@ -169,6 +169,9 @@ class GridData():
     depending on your preference, override is_den argument when initialising the class
     and either charge or pot array will be allocated.
 
+    Alternatively you can initialise the class directly by specifying the necessary attributes.
+    When done in this manner, only the cur_data array will be initialised (see below).
+
     There is also an auxiliary array called cur_data, that is needs to be set prior to using any plotting routines.
     This is achieved by using the set_current_data method.
     By default, this will default to the charge/npts or pot[0,:,:,:]
@@ -201,10 +204,19 @@ class GridData():
         Potential for non-collinear spin-potential (units : Hartrees)
     """
 
-    def __init__(self, filename: str, is_den: bool | None = None,
-                 nblank_header: int = 1
+    def __init__(self, filename: str | None = None,
+                 is_den: bool | None = None,
+                 nblank_header: int = 1,
+                 real_lat: npt.NDArray[np.float64] = None,
+                 dataarr: np.NDArray[np.float64] = None,
+                 units: str = ''
                  ):
-        """Read formatted CASTEP rectilinear grid data
+        """
+        Initialise rectilinear grid data.
+        This can be initialised in two ways:
+          1) Read formatted CASTEP rectilinear grid data
+          2) Specifying the relevant attributes directly.
+             NB: The grid data will be stored in the cur_data class.
 
         Parameters
         ----------
@@ -217,72 +229,98 @@ class GridData():
             number of blank lines after header
 
         """
-
-        # Check if we have a density, otherwise look at the file extension
-        # The main difference here apart from units is the FFT convention
-        # used in CASTEP. Densities are normalised to the electrons * ngridpts
-        # whereas potentials are in normal atomic units.
-        if is_den is None:
-            if filename.endswith('.den_fmt'):
-                self.is_den = True
+        # 09/06/2025 Decide how we want to initialise the file
+        if filename is not None:
+            # Check if we have a density, otherwise look at the file extension
+            # The main difference here apart from units is the FFT convention
+            # used in CASTEP. Densities are normalised to the electrons * ngridpts
+            # whereas potentials are in normal atomic units.
+            if is_den is None:
+                if filename.endswith('.den_fmt'):
+                    self.is_den = True
+                else:
+                    # Assume potential at least as far as normalisation is concerned
+                    self.is_den = False
             else:
-                # Assume potential at least as far as normalisation is concerned
-                self.is_den = False
-        else:
-            self.is_den = is_den
+                self.is_den = is_den
 
-        # Read the file
-        assert self.is_den is not None  # for type checks
-        header, gridvals = read_castep_fmt(filename, self.is_den, nblank_header)
+            # Read the file
+            assert self.is_den is not None  # for type checks
+            header, gridvals = read_castep_fmt(filename, self.is_den, nblank_header)
 
-        # Extract fine grid dimensions
-        self.fine_grid = np.array(header[8].split()[:3], dtype=int)
-        self.npts = np.prod(self.fine_grid)
+            # Extract fine grid dimensions
+            self.fine_grid = np.array(header[8].split()[:3], dtype=int)
+            self.npts = np.prod(self.fine_grid)
 
-        # Extract the unit cell vectors
-        self.real_lat = read_real_lat_fmt(filename)
+            # Extract the unit cell vectors
+            self.real_lat = read_real_lat_fmt(filename)
 
-        # Declare empty arrays first and allocate later
-        self.charge: npt.NDArray[np.float64] | None = None
-        self.spin: npt.NDArray[np.float64] | None = None
-        self.ncspin: npt.NDArray[np.float64] | None = None
-        self.pot: npt.NDArray[np.float64] | None = None
-        self.ncpot: npt.NDArray[np.float64] | None = None
-        self.cur_data: npt.NDArray[np.float64] | None = None
+            # Declare empty arrays first and allocate later
+            self.charge: npt.NDArray[np.float64] | None = None
+            self.spin: npt.NDArray[np.float64] | None = None
+            self.ncspin: npt.NDArray[np.float64] | None = None
+            self.pot: npt.NDArray[np.float64] | None = None
+            self.ncpot: npt.NDArray[np.float64] | None = None
+            self.cur_data: npt.NDArray[np.float64] | None = None
 
-        # Extract spin information and set non-collinear flag
-        nsets = gridvals.shape[0]
-        self.have_nc = nsets in (3, 4)
-        if self.have_nc is True:
+            # Extract spin information and set non-collinear flag
+            nsets = gridvals.shape[0]
+            self.have_nc = nsets in (3, 4)
+            if self.have_nc is True:
+                self.nspins = 1
+            else:
+                self.nspins = nsets
+
+            # Allocate necessary grid data
+            if self.is_den is True:
+                # Allocate charge density
+                self.charge = gridvals[0, :, :, :]
+
+                # Check if we need to allocate a spin density
+                if self.have_nc is True:
+                    self.ncspin = gridvals[1:, :, :, :]
+                elif self.nspins != 1:
+                    self.spin = gridvals[1, :, :, :]
+
+            else:
+                # Allocate potentials
+                if self.have_nc is True:
+                    self.ncpot = gridvals
+                else:
+                    self.pot = gridvals
+
+            # Set default set to be plotted - this will hopefully be the most modular/flexible 19/05/2025
+            if self.is_den is True:
+                self.set_current_data(self.charge/self.npts)  # normalisation
+                self.units = 'electrons'
+            else:
+                self.set_current_data(self.pot[0, :, :, :])
+                self.units = 'Hartrees'
+
+        else:  # Direct initialisation
+            if real_lat is None:
+                raise ValueError('real_lat must be provided for direct initialisation')
+            if dataarr is None:
+                raise ValueError('dataarr must be provided for direct initialisation')
+            if dataarr.ndim != 3:
+                raise IndexError('dataarr must be a 3D array')
+
+            self.real_lat = real_lat
+            self.cur_data = dataarr
+
+            if len(units) == 0:
+                self.units = 'a.u.'
+            else:
+                self.units = units.strip()
+
+            # Set other necessary info
+            self.fine_grid = self.cur_data.shape
+            self.npts = np.prod(self.fine_grid)
+
+            # Set other dummy info
+            self.is_den = False
             self.nspins = 1
-        else:
-            self.nspins = nsets
-
-        # Allocate necessary grid data
-        if self.is_den is True:
-            # Allocate charge density
-            self.charge = gridvals[0, :, :, :]
-
-            # Check if we need to allocate a spin density
-            if self.have_nc is True:
-                self.ncspin = gridvals[1:, :, :, :]
-            elif self.nspins != 1:
-                self.spin = gridvals[1, :, :, :]
-
-        else:
-            # Allocate potentials
-            if self.have_nc is True:
-                self.ncpot = gridvals
-            else:
-                self.pot = gridvals
-
-        # Set default set to be plotted - this will hopefully be the most modular/flexible 19/05/2025
-        if self.is_den is True:
-            self.set_current_data(self.charge/self.npts)  # normalisation
-            self.units = 'electrons'
-        else:
-            self.set_current_data(self.pot[0, :, :, :])
-            self.units = 'Hartrees'
+            self.have_nc = False
 
     def set_current_data(self, arr: npt.NDArray[np.float64]):
         """Set the current data to use for plotting.
