@@ -479,7 +479,8 @@ class UnitCell():
                  real_lat: npt.NDArray[np.float64] | None = None,
                  species: list | None = None,
                  frac_pos: npt.NDArray[np.float64] | None = None,
-                 cart_pos: npt.NDArray[np.float64] | None = None
+                 cart_pos: npt.NDArray[np.float64] | None = None,
+                 reduce_frac: bool = True
                  ):
         """Initialise the unit cell.
 
@@ -537,7 +538,9 @@ class UnitCell():
             # Have fractional coordinates so store them, then get Cartesian coordinates.
             assert frac_pos is not None
             # Rationalise fractional coordinates so that 0 <= frac_pos < 1 18/05/2025
-            frac_pos = reduce_frac_pts(frac_pos)
+            # Added option to disable rationalisation 09/06/2025
+            if reduce_frac is True:
+                frac_pos = reduce_frac_pts(frac_pos)
 
             self.frac_pos = frac_pos
             for i, pos in enumerate(frac_pos):
