@@ -208,7 +208,7 @@ class GridData():
                  is_den: bool | None = None,
                  nblank_header: int = 1,
                  real_lat: npt.NDArray[np.float64] = None,
-                 dataarr: npt.NDArray[np.float64] = None,
+                 datarr: npt.NDArray[np.float64] = None,
                  units: str = ''
                  ):
         """
@@ -300,13 +300,13 @@ class GridData():
         else:  # Direct initialisation
             if real_lat is None:
                 raise ValueError('real_lat must be provided for direct initialisation')
-            if dataarr is None:
-                raise ValueError('dataarr must be provided for direct initialisation')
-            if dataarr.ndim != 3:
-                raise IndexError('dataarr must be a 3D array')
+            if datarr is None:
+                raise ValueError('datarr must be provided for direct initialisation')
+            if datarr.ndim != 3:
+                raise IndexError('datarr must be a 3D array')
 
             self.real_lat = real_lat
-            self.cur_data = dataarr
+            self.cur_data = datarr
 
             if len(units) == 0:
                 self.units = 'a.u.'
