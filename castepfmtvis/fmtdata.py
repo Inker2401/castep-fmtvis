@@ -295,9 +295,16 @@ class GridData():
 
     def __init__(self, filename: str | None = None,
                  is_den: bool | None = None,
+                 nspins: int | None = None,
+                 have_nc: bool | None = None,
                  nblank_header: int = 1,
                  real_lat: npt.NDArray[np.float64] | None = None,
                  datarr: npt.NDArray[np.float64] | None = None,
+                 charge: npt.NDArray[np.float64] | None = None,
+                 spin: npt.NDArray[np.float64] | None = None,
+                 ncspin: npt.NDArray[np.float64] | None = None,
+                 pot: npt.NDArray[np.float64] | None = None,
+                 ncpot: npt.NDArray[np.float64] | None = None,
                  units: str = ''
                  ):
         """
@@ -306,6 +313,8 @@ class GridData():
           1) Read formatted CASTEP rectilinear grid data
           2) Specifying the relevant attributes directly.
              NB: The grid data will be stored in the cur_data class.
+
+        When initialising directly, both real_lat and dataarr must be set.
 
         Parameters
         ----------
@@ -317,6 +326,7 @@ class GridData():
         nblank_header : int
             number of blank lines after header
 
+        All other arguments follow attributes in class definition.
         """
         # Declare empty arrays first and allocate later
         self.charge: npt.NDArray[np.float64] | None = None
@@ -407,10 +417,33 @@ class GridData():
             self.fine_grid = np.array(self.cur_data.shape, dtype=int)
             self.npts = np.prod(self.fine_grid)
 
-            # Set other dummy info
-            self.is_den = False
-            self.nspins = 1
-            self.have_nc = False
+            # Set other (potentially) dummy info
+            if is_den is None:
+                self.is_den = False
+            else:
+                self.is_den = is_den
+
+            if nspins is None:
+                self.nspins = 1
+            else:
+                self.nspins = nspins
+
+            if have_nc is None:
+                self.have_nc = False
+            else:
+                self.have_nc = have_nc
+
+            # Set auxiliary arrays that may have been provided 08/10/2025
+            if charge is not None:
+                self.charge = charge
+            if spin is not None:
+                self.spin = spin
+            if ncspin is not None:
+                self.ncpot = ncpot
+            if pot is not None:
+                self.pot = pot
+            if ncpot is not None:
+                self.ncpot = ncpot
 
     def set_current_data(self, arr: npt.NDArray[np.float64]):
         """Set the current data to use for plotting.
