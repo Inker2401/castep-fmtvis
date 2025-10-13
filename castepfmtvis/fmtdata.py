@@ -467,8 +467,8 @@ class GridData():
             )
         self.cur_data = arr
 
-    def get_rho_up_down(self, ret_arrs: bool = False) -> Optional[Tuple[
-            npt.NDArray[np.float64], npt.NDArray[np.float64]]]:
+    def get_rho_up_down(self, ret_arrs: bool = False) -> Optional[Tuple[npt.NDArray[np.float64],
+                                                                        npt.NDArray[np.float64]]]:
         """Get the charge density for each spin channel.
 
         By default, the 'up' channel or whatever the first spin channel's charge density
@@ -516,8 +516,8 @@ class GridData():
             self.spin = rhodown
             self.have_rho_up_down = True
 
-    def get_charge_spin(self, ret_arrs: bool = False) -> Optional[Tuple[
-            npt.NDArray[np.float64], npt.NDArray[np.float64]]]:
+    def get_charge_spin(self, ret_arrs: bool = False) -> Optional[Tuple[npt.NDArray[np.float64],
+                                                                        npt.NDArray[np.float64]]]:
         """Get the total charge and spin density from spin channel densities.
 
         This assumes that rhoup is in the charge attribute and rhodown is the spin attribute.
