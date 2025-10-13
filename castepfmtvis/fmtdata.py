@@ -16,12 +16,14 @@ Author: Visagan Ravindran
 """
 import numpy as np
 import numpy.typing as npt
+from scipy.io import FortranFile
 
 from castepfmtvis import io
 from typing import Optional, Tuple
 
 __all__ = ['GridData', 'read_castep_fmt', 'read_real_lat_fmt',
-           'den_spin_to_rho_up_down', 'rho_up_down_to_den_spin']
+           'den_spin_to_rho_up_down', 'rho_up_down_to_den_spin',
+           'read_unfmt_den', 'read_unfmt_pot', 'read_cst_esp']
 
 
 def read_real_lat_fmt(filename: str) -> npt.NDArray[np.float64]:
@@ -467,7 +469,8 @@ class GridData():
             )
         self.cur_data = arr
 
-    def get_rho_up_down(self, ret_arrs: bool = False) -> Optional[Tuple[
+
+   def get_rho_up_down(self, ret_arrs: bool = False) -> Optional[Tuple[
             npt.NDArray[np.float64], npt.NDArray[np.float64]]]:
         """Get the charge density for each spin channel.
 
@@ -644,3 +647,134 @@ def _frac_shift_grid(griddata: GridData, frac_shift: npt.NDArray[np.float64]) ->
     griddata.cur_data = _do_shift(griddata.cur_data)
 
     return griddata
+
+
+# Functions to read unformatted densities and potenials
+def read_unfmt_den(file: FortranFile, fine_grid: tuple[int, int, int],
+                   have_spin: bool = False, have_nc: bool = False) -> np.ndarray:
+    """Read an unformatted, sequential real-space density from CASTEP.
+
+    This assumes CASTEP is compiled with the default big endian compilation flag.
+
+    NOTE: Non-collinear calculations are not currently supported.
+
+    Parameters
+    ----------
+    file : FortranFile
+        opened file to read density from.
+    fine_grid : tuple[int, int, int]
+        dimensions of FFT grid in CASTEP
+    have_spin : bool
+        doing spin-polarised calculation
+    have_nc : bool
+        doing non-collinear calculation
+    Returns
+    -------
+    charge: np.ndarray
+        real-space charge density
+    spin: np.ndarray
+        real-space spin density (only returned if have_spin is True)
+    """
+
+    if have_nc is True:
+        raise NotImplementedError('Non-collinear density read not implemented.')
+
+    ngx, ngy, ngz = fine_grid
+
+    charge_grid = np.empty((ngx, ngy, ngz), dtype=np.float64)
+    if have_spin is True:
+        spin_grid = np.empty((ngx, ngy, ngz), dtype=np.float64)
+
+    for i in range(ngx):
+        for j in range(ngy):
+            # Have mixed record containing x,y grid coordinate
+            # and then charge/spin values for z column.
+            # NB: CASTEP always write complex z columns even if data is real.
+            raw = file.read_record('>b')
+            nx, ny = np.frombuffer(raw[:8], dtype='>i4')
+            end = 8 + 16*ngz
+            charge_zcol = np.frombuffer(raw[8:end],
+                                        dtype='>c16', count=ngz)
+            charge_grid[nx-1, ny-1, :] = charge_zcol[:].real
+            if have_spin is True:
+                spin_zcol = np.frombuffer(raw[end:],
+                                          dtype='>c16', count=ngz)
+                spin_grid[nx-1, ny-1, :] = spin_zcol[:].real
+
+    if have_spin is True:
+        return charge_grid, spin_grid
+    else:
+        return charge_grid
+
+
+def read_unfmt_pot(file: FortranFile, fine_grid: tuple[int, int, int],
+                   have_spin: bool = False, have_nc: bool = False) -> np.ndarray:
+    """Read an unformatted, sequential real-space potential produced by CASTEP.
+
+    This assumes CASTEP is compiled with the default big endian compilation flag.
+
+    NOTE: Non-collinear calculations are not currently supported.
+
+    Parameters
+    ----------
+    unfmtfile : FortranFile
+        opened file to read potential from.
+    fine_grid : tuple[int, int, int]
+        dimensions of FFT grid in CASTEP
+    have_spin : bool
+        doing spin-polarised calculation
+    have_nc : bool
+        doing non-collinear calculation
+    Returns
+    -------
+    np.ndarray
+        fine_pot array containing real-space potential
+    """
+
+    if have_nc is True:
+        raise NotImplementedError('Non-collinear potential read not implemented.')
+
+    if have_spin is True:
+        nspins = 2
+    else:
+        nspins = 1
+
+    ngx, ngy, ngz = fine_grid
+    pot = np.empty((nspins, ngx, ngy, ngz), np.float64)
+
+    for ns in range(nspins):
+        for i in range(ngx):
+            for j in range(ngy):
+                # Have mixed record containing x,y grid coordinate
+                # and then potential values for z column.
+                raw = file.read_record('>b')
+                nx, ny = np.frombuffer(raw[:8], dtype='>i4')
+                pot_zcol = np.frombuffer(raw[8:], dtype='>c16', count=ngz)
+                pot[ns, nx-1, ny-1, :] = pot_zcol[:].real
+
+    return pot
+
+
+def read_cst_esp(filename: str, have_nc: bool = False) -> np.ndarray:
+    """Read a CASTEP .cst_esp file.
+
+    Parameters
+    ----------
+    Same as read_unfmt_pot, see docstring for that routine.
+
+    Returns
+    -------
+    np.ndarray
+        CST ESP potential in real-space.
+    """
+
+    with FortranFile(filename, 'r', header_dtype='>u4') as f:
+        nspins = f.read_ints('>i4')[0]
+        fine_grid = f.read_ints('>i4')
+
+        if nspins == 2:
+            have_nspin = True
+        else:
+            have_nspin = False
+        pot = read_unfmt_pot(f, fine_grid, have_nspin)
+    return pot
