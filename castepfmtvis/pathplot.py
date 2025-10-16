@@ -314,8 +314,12 @@ class PathData:
                         shaft_portion: float = 0.75,
                         tip_radius: float = 0.2,
                         shaft_radius: float = 0.07,
+                        arrow_prefix: str = 'arrow'
                         ):
         """Add arrows to the cell visualisation to show the path taken.
+
+        Note if making a multiple stage path using different calls to this routine,
+        make sure to set arrow_prefix. Otherwise, PyVista will override the original meshes.
 
         Parameters
         ----------
@@ -333,6 +337,8 @@ class PathData:
             radius of arrow tips.
         shaft_radius : float
             radius of arrow shaft.
+        arrow_prefix : str
+            prefix to add to the name of arrow mesh.
         """
         # Get the path points in Cartesian coordinates
         path_cart = np.empty((self.nspec, 3), dtype=np.float64)
@@ -352,7 +358,7 @@ class PathData:
                                 )
 
             plotter.add_mesh(arrow,
-                             name=f'arrow_{i}',
+                             name=f'{arrow_prefix}_{i}',
                              color=color,
                              smooth_shading=True
                              )
