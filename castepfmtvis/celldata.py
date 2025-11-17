@@ -14,11 +14,11 @@ import numpy as np
 import numpy.typing as npt
 import spglib
 
+from ase.units import Bohr
+
 import castepfmtvis.arithmetic as arit
 from castepfmtvis import io
 from castepfmtvis.utils import cart_to_frac, frac_to_cart, reduce_frac_pts
-
-from ase.units import Bohr
 
 __all__ = ['UnitCell', 'calc_recip_lat',
            'cell_cart_to_abc', 'cell_abc_to_cart']
