@@ -21,7 +21,8 @@ from castepfmtvis import io
 from typing import Optional, Tuple
 
 __all__ = ['GridData', 'read_castep_fmt', 'read_real_lat_fmt',
-           'den_spin_to_rho_up_down', 'rho_up_down_to_den_spin']
+           'den_spin_to_rho_up_down', 'rho_up_down_to_den_spin',
+           'den2phys']
 
 
 def read_real_lat_fmt(filename: str) -> npt.NDArray[np.float64]:
@@ -583,6 +584,36 @@ class GridData():
         """
         return _frac_shift_grid(self, frac_shift)
 
+    def charge2phys(self) -> npt.NDArray[np.float64]:
+        """Get the charge density in units of inverse volume from CASTEP units
+
+        See den2phys for more details.
+        """
+        if self.is_den is False:
+            raise ValueError('Do not have a density - cannot retrieve charge')
+        if self.charge is None:
+            raise AssertionError('Charge array not allocated!')
+        return den2phys(self.charge, self.real_lat)
+
+    def spin2phys(self) -> npt.NDArray[np.float64]:
+        """Get the spin density in units of inverse volume from CASTEP units
+
+        If running a non-collinear calculation, the spin density vector is returned instead.
+
+        See den2phys for more details.
+        """
+        if self.is_den is False:
+            raise ValueError('Do not have a density - cannot retrieve spin')
+
+        if self.have_nc is True:
+            if self.ncspin is None:
+                raise AssertionError('Spin density vector not allocated!')
+            return den2phys(self.ncspin, self.real_lat)
+        else:
+            if self.spin is None or self.nspins == 1:
+                raise AssertionError('Spin density not allocated!')
+            return den2phys(self.spin, self.real_lat)
+
 
 def _frac_shift_grid(griddata: GridData, frac_shift: npt.NDArray[np.float64]) -> GridData:
     """Perform cyclic shift on grid data with shift in frac. coords.
@@ -644,3 +675,28 @@ def _frac_shift_grid(griddata: GridData, frac_shift: npt.NDArray[np.float64]) ->
     griddata.cur_data = _do_shift(griddata.cur_data)
 
     return griddata
+
+
+def den2phys(gridvals: npt.NDArray[np.float64], real_lat: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    """Obtain density in units of inverse volume from CASTEP units.
+
+    CASTEP internally stores (charge) density in units of no of electrons*grid points.
+    The density data is normalised to nelectrons when dividing by grid points.
+    Each grid points/voxel occupies a volume (ngrid/volume) where ngrid is the
+    number of grid points. Therefore to get the density in physical units,
+         den_phys = dens_raw/npts * npts/vol = dens_raw/volume.
+
+    Parameters
+    ----------
+    gridvals : npt.NDArray[np.float64]
+        density on grid
+    real_lat : npt.NDArray[np.float64]
+        real lattice vectors
+    ret_au : bool
+        real lattice vectors
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        density on grid in units of inverse volume.
+    """
+    return gridvals/np.abs(np.linalg.det(real_lat))  # gridvals/vol
